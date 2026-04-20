@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(iconv -f UTF-16 -t UTF-8 /c/Users/HP/PycharmProjects/Tender/requirements.txt)",
+      "Bash(python3 -c \"with open\\('/c/Users/HP/PycharmProjects/Tender/requirements.txt', 'r', encoding='utf-16'\\) as f: print\\(f.read\\(\\)\\)\")",
+      "Bash(python3 -c ' *)",
+      "Bash(python3 *)"
+    ]
+  }
+}
