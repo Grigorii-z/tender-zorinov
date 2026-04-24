@@ -27,3 +27,21 @@ CatBoost сейчас самая быстрая и малозатратная п
 
 Ссылка на датасет - https://www.kaggle.com/datasets/dadalyndell/russian-biggest-government-procurement-contracts?select=tender_data.csv
 
+## День 4
+Проанлаизированы и отсортированы данные, построенны графики по ключевым факторам полученных данных
+### Создано
+- Создан ноутбук `notebooks/02_eda_deep.ipynb` с анализом данных
+- Сохранены 7 графиков в `reports/`
+- Создан первый обработанный датасет `data/processed/tender_data_v1.parquet`
+
+
+### Решения на основе EDA
+- Целевая: y_success (бинарная классификация)
+- Splitting: по времени, cutoff [дата]
+- Категориальные признаки: customer_region, procedure, legislation, for_small_business
+- Числовые признаки: start_price (с log), tender_security, advance_money_pct
+- Исключаем: url, tender_id, winner_* (это результат, не признак)
+- Добавить признаки: year, month, quarter из publication_date
+
+
+
