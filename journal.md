@@ -43,5 +43,46 @@ CatBoost сейчас самая быстрая и малозатратная п
 - Исключаем: url, tender_id, winner_* (это результат, не признак)
 - Добавить признаки: year, month, quarter из publication_date
 
+## День 6: Первая CatBoost-модель
+
+### Выполнено
+- Создан ноутбук `notebooks/04_baseline_model.ipynb`
+- Обучена первая модель CatBoostClassifier
+- Получены первые метрики качества
+- Построены: confusion matrix, ROC-кривая, feature importance, threshold analysis
+- Сохранены: модель (`models/catboost_baseline.cbm`) и метрики
+
+### Параметры модели
+- iterations: 500 (с early_stopping_rounds=50)
+- learning_rate: 0.05
+- depth: 6
+- eval_metric: AUC
+- random_seed: 42
+
+### Результаты
+Accuracy    : 0.670
+Precision   : 0.662
+Recall      : 0.389
+F1          : 0.490
+AUC-ROC     : 0.697
+
+Лучшая итерация: 82 из 500.
+Оптимальный порог по F1: 0.490 (F1 = ___).
+
+### Топ-5 важнейших признаков
+1. ___ — ___%
+2. ___ — ___%
+3. ___ — ___%
+4. ___ — ___%
+5. ___ — ___%
+
+### Наблюдения
+- [впиши, что показалось интересным/неожиданным в результатах]
+- [баланс ошибок: чего больше — FP или FN]
+- [как идут train и test AUC: близко или сильно расходятся]
+
+
+
+
 
 
