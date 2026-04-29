@@ -35,13 +35,35 @@ CatBoost сейчас самая быстрая и малозатратная п
 - Создан первый обработанный датасет `data/processed/tender_data_v1.parquet`
 
 
-### Решения на основе EDA
+### Решения на основе EDA (разведочного анализа данных)
 - Целевая: y_success (бинарная классификация)
 - Splitting: по времени, cutoff [дата]
 - Категориальные признаки: customer_region, procedure, legislation, for_small_business
 - Числовые признаки: start_price (с log), tender_security, advance_money_pct
 - Исключаем: url, tender_id, winner_* (это результат, не признак)
 - Добавить признаки: year, month, quarter из publication_date
+
+## День 5: Feature Engineering
+
+### Выполнено
+- Создан ноутбук `notebooks/03_feature_engineering.ipynb`
+- Сконструировано новых признаков:
+  - Временные: year, month, quarter, day_of_week, is_end_of_quarter, is_end_of_year
+  - Финансовые: log_start_price, security_ratio, has_security, advance_money_pct, has_advance
+  - History (на прошлых данных через expanding+shift):
+    - customer_total_tenders, customer_success_rate
+    - region_total_tenders, region_success_rate
+    - procedure_success_rate
+- Обработаны пропуски: CAT_FEATURES → 'Unknown', tender_security → 0
+- Выполнен time-based split 80/20, граница: [дата]
+- Сохранён готовый датасет в `data/processed/tender_data_v2.parquet`
+- Список признаков зафиксирован в `src/features.py`
+
+### Решения
+- Целевая y_success: бинарная классификация
+- Time-split вместо random-split — предотвращает утечку будущего в прошлое
+- History-features считаются через `expanding().mean().shift(1)` — защита от leak
+- CatBoost обработает остальные пропуски в числовых признаках сам
 
 ## День 6: Первая CatBoost-модель
 
@@ -70,15 +92,15 @@ AUC-ROC     : 0.697
 Оптимальный порог по F1: 0.490 (F1 = ___).
 
 ### Топ-5 важнейших признаков
-1. ___ — ___%
-2. ___ — ___%
-3. ___ — ___%
-4. ___ — ___%
-5. ___ — ___%
+1. procedure  —  18.606839 
+2. customer_success_rate   16.927857
+3. customer_region_code   11.728858
+4. procedure_success_rate    8.056545
+5. customer_total_tenders    7.310523
 
 
 
-## 28 апреля — День 7: Эксперименты с дисбалансом и feature engineering
+## День 7: Эксперименты с дисбалансом и feature engineering
 
 ### Полная таблица экспериментов
 
@@ -114,11 +136,11 @@ AUC-ROC     : 0.697
 ### Финальная модель
 Сохранена в `models/catboost_final.cbm`.
 
-### Что НЕ сработало (и почему)
+### Что НЕ сработало
 - Понижение learning_rate до 0.01: best_iter упал до 5, прироста нет
 - Признак region×procedure: коррелирует с уже имеющимися, не добавляет информации
 
-## 29 апреля — День 8: Валидация и интерпретация модели
+## День 8: Валидация и интерпретация модели
 
 ### Кросс-валидация по времени (TimeSeriesSplit, 5 фолдов)
 
@@ -180,11 +202,7 @@ AUC-ROC     : 0.697
 - Понимание границ применимости (где модель работает, где нет)
 - Обоснование выбора порога классификации
 
-### План на 30 апреля (День 9)
-- Начало работы над Streamlit-интерфейсом
-- Базовая структура: форма ввода + кнопка прогноза + вывод вероятности
-- Подключение финальной модели
-- Простая SHAP-визуализация для пользователя
+
 
 
 
