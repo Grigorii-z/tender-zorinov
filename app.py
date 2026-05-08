@@ -17,6 +17,52 @@ from src.streamlit_helpers import (
     build_full_features,
 )
 
+# ============ ПЕРЕВОДЫ ПРИЗНАКОВ НА РУССКИЙ ============
+
+FEATURE_NAMES_RU = {
+    # Финансовые
+    'start_price': 'Начальная цена контракта',
+    'log_start_price': 'Логарифм начальной цены',
+    'tender_security': 'Сумма обеспечения заявки',
+    'security_ratio': 'Отношение обеспечения к цене',
+    'has_security': 'Наличие обеспечения',
+    'advance_money_pct': 'Размер аванса (доля)',
+    'has_advance': 'Наличие аванса',
+
+    # Временные
+    'year': 'Год публикации',
+    'month': 'Месяц публикации',
+    'quarter': 'Квартал публикации',
+    'day_of_week': 'День недели публикации',
+    'day_of_month': 'День месяца публикации',
+    'is_end_of_quarter': 'Конец квартала',
+    'is_end_of_year': 'Конец года (декабрь)',
+
+    # History — самые важные
+    'customer_total_tenders': 'Всего тендеров у заказчика',
+    'customer_success_rate': 'Историческая успешность заказчика',
+    'region_total_tenders': 'Всего тендеров в регионе',
+    'region_success_rate': 'Историческая успешность региона',
+    'procedure_success_rate': 'Историческая успешность процедуры',
+    'cust_proc_success_rate': 'Успешность заказчика по этой процедуре',
+    'cust_proc_count': 'Опыт заказчика в этой процедуре',
+    'price_vs_cust_avg': 'Отклонение цены от средней по заказчику',
+
+    # Категориальные
+    'procedure': 'Способ отбора',
+    'legislation': 'Законодательство',
+    'for_small_business': 'Только для малого бизнеса',
+    'customer_region_code': 'Код региона',
+    'customer_region': 'Регион',
+
+    # Текстовое
+    'tender_name': 'Название тендера',
+}
+
+
+def translate_feature(feature_name: str) -> str:
+    """Возвращает русское название признака или сам ключ, если перевода нет."""
+    return FEATURE_NAMES_RU.get(feature_name, feature_name)
 # ============ НАСТРОЙКА СТРАНИЦЫ ============
 
 st.set_page_config(
@@ -132,10 +178,53 @@ with col1:
         help="10 или 12 цифр. Если ИНН не было в данных — будут нейтральные значения истории."
     )
 
-    pub_date = st.date_input(
-        "Дата публикации",
-        value=date.today()
-    )
+    st.markdown("**Дата публикации**")
+    date_col1, date_col2, date_col3 = st.columns(3)
+
+    MONTHS_RU = [
+        "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+        "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
+    ]
+
+    today = date.today()
+
+    with date_col1:
+        pub_day = st.selectbox(
+            "День",
+            options=list(range(1, 32)),
+            index=today.day - 1,
+            key="pub_day"
+        )
+
+    with date_col2:
+        pub_month_label = st.selectbox(
+            "Месяц",
+            options=MONTHS_RU,
+            index=today.month - 1,
+            key="pub_month"
+        )
+        pub_month = MONTHS_RU.index(pub_month_label) + 1
+
+    with date_col3:
+        pub_year = st.selectbox(
+            "Год",
+            options=list(range(2017, today.year + 2)),
+            index=list(range(2017, today.year + 2)).index(today.year),
+            key="pub_year"
+        )
+
+    # Собираем дату с защитой от некорректных значений (например, 31 февраля)
+    from datetime import date as date_class
+
+    try:
+        pub_date = date_class(pub_year, pub_month, pub_day)
+    except ValueError:
+        # Если дата некорректная (например, 31 февраля) — берём последний день месяца
+        import calendar
+
+        last_day = calendar.monthrange(pub_year, pub_month)[1]
+        pub_date = date_class(pub_year, pub_month, min(pub_day, last_day))
+        st.warning(f"Дата скорректирована до {pub_date}")
 
 with col2:
     st.subheader("Финансовые параметры")
@@ -248,11 +337,23 @@ if st.button("🔮 Получить рекомендацию", type="primary", u
                 value=confidence
             )
 
-    st.subheader("Топ-5 факторов, повлиявших на решение")
+    st.subheader("📊 Топ-5 факторов, повлиявших на решение")
     for i, feat in enumerate(result['top_features'], 1):
         direction = "↑ повышает" if feat['contribution'] > 0 else "↓ понижает"
+        feature_ru = translate_feature(feat['feature'])
+
+        # Форматируем значение красиво
+        value = feat['value']
+        if isinstance(value, float):
+            if abs(value) < 1:
+                value_str = f"{value:.3f}"
+            else:
+                value_str = f"{value:,.0f}"
+        else:
+            value_str = str(value)[:80]  # обрезаем длинные строки (например, tender_name)
+
         st.write(
-            f"**{i}. {feat['feature']}** = {feat['value']} "
+            f"**{i}. {feature_ru}** = `{value_str}` "
             f"({direction} вероятность на {abs(feat['contribution']):.3f})"
         )
 
